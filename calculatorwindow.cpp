@@ -7,6 +7,10 @@ CalculatorWindow::CalculatorWindow(QWidget *parent)
 {
     ui->setupUi(this);
     buttonConnection();
+    connect(ui->lineEdit,
+            &QLineEdit::textEdited,
+            this,
+            &CalculatorWindow::keyboardInput);
 }
 
 void CalculatorWindow::buttonConnection(){
@@ -105,17 +109,17 @@ CalculatorWindow::~CalculatorWindow()
 
 void CalculatorWindow::buttonClickEqual(){
     qDebug() << "Button Click Equal" ;
-//    this->ui->label->
     qDebug() << this->ui->lineEdit->text();
 }
 
 
 void CalculatorWindow::buttonClickInput(char c){
     qDebug() << "Button Click " << c ;
-    std::string exp = this->ui->lineEdit->text().toStdString();
-    exp += c;
-    QString qexp(exp.c_str());
+    expression = ui->lineEdit->text().toStdString();
+    expression += c;
+    QString qexp(expression.c_str());
     this->ui->lineEdit->setText(qexp);
+    easyInputCheck();
 }
 
 void CalculatorWindow::lineEditFontSizeCheck(){
@@ -131,6 +135,35 @@ void CalculatorWindow::lineEditFontSizeCheck(){
     }
 }
 
+void CalculatorWindow::easyInputCheck(){
+    bool isL1Op(false), isL2Op(false);
+    if(expression.size() < 2) return;
+    char l1, l2;
+    l1 = expression[expression.size()-1];
+    l2 = expression[expression.size()-2];
+    for(auto i(0); i < sizeof(operatorChar); i++){
+        if(l1 == operatorChar[i]){
+            isL1Op = true;
+        }
+        if(l2 == operatorChar[i]){
+            isL2Op = true;
+        }
+    }
+    if(isL1Op && isL2Op){
+        expression.pop_back();
+        expression.pop_back();
+        expression.push_back(l1);
+        QString qexp(expression.c_str());
+        ui->lineEdit->setText(qexp);
+    }
+}
+
 void CalculatorWindow::resizeEvent(QResizeEvent *event){
     lineEditFontSizeCheck();
+}
+
+
+void CalculatorWindow::keyboardInput(){
+    expression = ui->lineEdit->text().toStdString();
+    easyInputCheck();
 }
