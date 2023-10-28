@@ -2,29 +2,28 @@
 
 SciNum::SciNum()
 {
-	memset(coefficient,0,sizeof(int)*200);
+    std::memset(coefficient,0,sizeof(int)*200);
 	symbol=0;
-	error="\0";
+    error="";
 	error_flag=0;
 	mantissa=0;
 	exponent=0;
 }
 
-SciNum::SciNum(char *n)
+SciNum::SciNum(const char *n)
 {
 	int decimal_point_flag=0;//代表找到的小数点的数量
 	std::stack<char>int_part;
 
-	{//先都赋成0
-		memset(coefficient,0,sizeof(int)*200);
-		error="\0";
-		error_flag=0;
-		mantissa=0;
-		exponent=0;
-		symbol=1;
-	}
-
-	char*p=n;
+    {//先都赋成0
+        std::memset(coefficient,0,sizeof(int)*200);
+        error="\0";
+        error_flag=0;
+        mantissa=0;
+        exponent=0;
+        symbol=1;
+    }
+    const char* p=n;
 	if(*p=='-')
 	{
 		symbol=-1;
@@ -169,8 +168,8 @@ void SciNum::calculate_sci_to_num()
 {
 	if(error_flag)return;
 	
-	memset(coefficient,0,sizeof(int)*200);
-	if(abs(mantissa)<1e-6)
+    std::memset(coefficient,0,sizeof(int)*200);
+    if(std::abs(mantissa)<1e-6)
 	{
 		symbol=0;
 		num=0;
@@ -180,13 +179,13 @@ void SciNum::calculate_sci_to_num()
 	else if(mantissa<0)symbol=-1;
 
 	double temp=mantissa;
-	temp=abs(temp);
+    temp=std::abs(temp);
 	for(int i=exponent+100;i>=0;i--)
 	{
 		coefficient[i]=(int)temp;
 		temp*=10;
 		while(temp>10)temp-=10;
-		if(abs(temp)<1e-14)break;
+        if(std::abs(temp)<1e-14)break;
 	}
 
 	this->calculate_num();
@@ -203,32 +202,33 @@ void SciNum::show_num()
 	std::cout << num << std::endl;
 }
 
-int SciNum::compare(SciNum n2)
+int SciNum::compare(const SciNum &n1, const SciNum &n2)
 {
-	if(symbol<n2.symbol)return -1;
-	if(symbol>n2.symbol)return 1;
+    if(n1.symbol<n2.symbol)return -1;
+    if(n1.symbol>n2.symbol)return 1;
 	int cmp=0;
 	for(int i=199;i>=0;i--)
 	{
-		if(coefficient[i]==n2.coefficient[i])
+        if(n1.coefficient[i]==n2.coefficient[i])
 		{
 			if(i!=0)continue;
 			else cmp=0;
 		}
 		else 
 		{
-			cmp=coefficient[i]-n2.coefficient[i];
+            cmp=n1.coefficient[i]-n2.coefficient[i];
 			break;
 		}
 	}
-	if(cmp>0&&symbol>0)return 1;
-	else if(cmp>0&&symbol<0)return -1;
+    if(cmp>0&&n1.symbol>0)return 1;
+    else if(cmp>0&&n1.symbol<0)return -1;
 	else if(cmp==0)return 0;
-	else if(cmp<0&&symbol>0)return -1;
-	else if(cmp<0&&symbol<0)return 1;
+    else if(cmp<0&&n1.symbol>0)return -1;
+    else if(cmp<0&&n1.symbol<0)return 1;
+    return 0;
 }
 
-SciNum SciNum::operator+(SciNum n2)
+SciNum SciNum::operator+(const SciNum& n2) const
 {
 	SciNum ans;
 	if(error_flag==1)
@@ -290,7 +290,7 @@ SciNum SciNum::operator+(SciNum n2)
 	}
 }
 
-SciNum SciNum::operator-(SciNum n2)
+SciNum SciNum::operator-(const SciNum& n2) const
 {
 	SciNum ans;
 	if(error_flag==1)
@@ -322,9 +322,9 @@ SciNum SciNum::operator-(SciNum n2)
 		int abscmp=0;//比较绝对值大小
 		if(symbol>0)
 		{
-			abscmp=this->compare(n2);
+            abscmp=compare(*this, n2);
 		}
-		else abscmp=-(this->compare(n2));
+        else abscmp=-(compare(*this, n2));
 		if(abscmp<0)
 		{
 			ans=n2-*this;
@@ -363,7 +363,7 @@ SciNum SciNum::operator-(SciNum n2)
 	}
 }
 
-SciNum SciNum::operator*(SciNum n2)
+SciNum SciNum::operator*(const SciNum& n2) const
 {
 	SciNum ans;
 	if(error_flag==1)
@@ -417,7 +417,7 @@ SciNum SciNum::operator*(SciNum n2)
 	return ans;
 }
 
-SciNum SciNum::operator/(SciNum n2)
+SciNum SciNum::operator/(const SciNum& n2) const
 {
 	SciNum ans;
 	if(error_flag==1)
@@ -450,14 +450,14 @@ SciNum SciNum::operator/(SciNum n2)
 	dividend.symbol=1;
 	n2ei.symbol=1;
 	int i=100;
-	while(dividend.compare(n2ei*num10)==1)
+    while(compare(dividend, n2ei*num10)==1)
 	{
 		n2ei=n2ei*num10;
 		i++;
 	}
 	while(i>=0)
 	{
-		while(dividend.compare(n2ei)>=0)
+        while(compare(dividend, n2ei)>=0)
 		{
 			dividend=dividend-n2ei;
 			ans.coefficient[i]++;
@@ -477,7 +477,7 @@ SciNum SciNum::operator/(SciNum n2)
 	return ans;
 }
 
-SciNum SciNum::operator^(SciNum n2)
+SciNum SciNum::operator^(const SciNum& n2) const
 {
 	SciNum ans;
 	if(error_flag==1)
@@ -505,12 +505,12 @@ SciNum SciNum::operator^(SciNum n2)
 
 	double new_mantissa=pow(mantissa,n2.num);//计算尾数的n2次方,exp为指数部分
 	int exp=0;
-	while(abs(new_mantissa)>10-1e-6)
+    while(std::abs(new_mantissa)>10-1e-6)
 	{
 		new_mantissa/=10;
 		exp++;
 	}
-	while(abs(new_mantissa)<1-1e-6)
+    while(std::abs(new_mantissa)<1-1e-6)
 	{
 		new_mantissa*=10;
 		exp--;
@@ -546,64 +546,64 @@ SciNum SciNum::operator^(SciNum n2)
 	return ans;
 }
 
-SciNum SciNum::Sin()
+SciNum SciNum::sin(SciNum n)
 {
 	SciNum ans;
-	if(error_flag)return *this;
-	if(num>1e10)
+    if(n.error_flag)return n;
+    if(n.num>1e10)
 	{
-		error_flag=1;
-		error="数据溢出";
-		return *this;
+        n.error_flag=1;
+        n.error="数据溢出";
+        return n;
 	}
-	if(abs(num)<1e-6)return *this;
-	double temp=sin(num);
+    if(std::abs(n.num)<1e-6)return n;
+    double temp=std::sin(n.num);
 	int exp=0;
 	while(temp>10-1e-6)
 	{
 		temp/=10;
 		exp++;
-	}
-	while(abs(temp)<1-1e-6)
+    }
+    while(std::abs(temp)<1-1e-6)
 	{
 		temp*=10;
 		exp--;
-	}
-	ans.num=sin(num);
+    }
+    ans.num=std::sin(n.num);
 	ans.exponent=exp;
 	ans.mantissa=temp;
 	ans.calculate_sci_to_num();
 	return ans;
 }
-SciNum SciNum::Cos()
+SciNum SciNum::cos(SciNum n)
 {
 	SciNum ans;
-	if(error_flag)return *this;
-	if(num>1e10)
+    if(n.error_flag)return n;
+    if(n.num>1e10)
 	{
-		error_flag=1;
-		error="数据溢出";
-		return *this;
+        n.error_flag=1;
+        n.error="数据溢出";
+        return n;
 	}
-	if(abs(num)<1e-6)
+    if(std::abs(n.num)<1e-6)
 	{
 		SciNum b("1");
-		ans=b-*this;
+        ans=b-n;
 		return ans;
-	}
-	double temp=cos(num);
+    }
+    double temp=std::cos(n.num);
 	int exp=0;
 	while(temp>10-1e-6)
 	{
 		temp/=10;
 		exp++;
 	}
-	while(abs(temp)<1-1e-6)
+    while(std::abs(temp)<1-1e-6)
 	{
 		temp*=10;
 		exp--;
-	}
-	ans.num=cos(num);
+    }
+    ans.num=std::cos(n.num);
 	ans.exponent=exp;
 	ans.mantissa=temp;
 	ans.calculate_sci_to_num();
