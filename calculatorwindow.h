@@ -18,7 +18,7 @@ private:
     std::string expression;
     void buttonConnection();
     void addExpression(char c);
-    void lineEditFontSizeCheck();
+    void labelFontSizeCheck();
     void resizeEvent(QResizeEvent *event);
     void easyInputCheck();
 
@@ -27,7 +27,7 @@ public:
     ~CalculatorWindow();
     void buttonClickEqual();
     void buttonClickInput(char c);
-    void keyboardInput();
+    void buttonClickBackspace();
 
 private:
     Ui::CalculatorWindow *ui;

@@ -7,10 +7,6 @@ CalculatorWindow::CalculatorWindow(QWidget *parent)
 {
     ui->setupUi(this);
     buttonConnection();
-    connect(ui->lineEdit,
-            &QLineEdit::textEdited,
-            this,
-            &CalculatorWindow::keyboardInput);
 }
 
 void CalculatorWindow::buttonConnection(){
@@ -98,7 +94,10 @@ void CalculatorWindow::buttonConnection(){
             this,
             [=]()
             {buttonClickInput('^');});
-
+    connect(ui->backspaceButton,
+            &QPushButton::clicked,
+            this,
+            &CalculatorWindow::buttonClickBackspace);
 }
 
 CalculatorWindow::~CalculatorWindow()
@@ -109,29 +108,28 @@ CalculatorWindow::~CalculatorWindow()
 
 void CalculatorWindow::buttonClickEqual(){
     qDebug() << "Button Click Equal" ;
-    qDebug() << this->ui->lineEdit->text();
+    qDebug() << this->ui->label->text();
 }
 
 
 void CalculatorWindow::buttonClickInput(char c){
     qDebug() << "Button Click " << c ;
-    expression = ui->lineEdit->text().toStdString();
+    expression = ui->label->text().toStdString();
     expression += c;
-    QString qexp(expression.c_str());
-    this->ui->lineEdit->setText(qexp);
+    this->ui->label->setText(expression.c_str());
     easyInputCheck();
 }
 
-void CalculatorWindow::lineEditFontSizeCheck(){
-    int height = this->ui->lineEdit->height();
-    QFont f(this->ui->lineEdit->font());
+void CalculatorWindow::labelFontSizeCheck(){
+    int height = this->ui->label->height();
+    QFont f(this->ui->label->font());
     if(height < 50){
-        f.setPixelSize(12);
-        this->ui->lineEdit->setFont(f);
+        f.setPixelSize(18);
+        this->ui->label->setFont(f);
     }
     else{
         f.setPixelSize(28);
-        this->ui->lineEdit->setFont(f);
+        this->ui->label->setFont(f);
     }
 }
 
@@ -153,17 +151,17 @@ void CalculatorWindow::easyInputCheck(){
         expression.pop_back();
         expression.pop_back();
         expression.push_back(l1);
-        QString qexp(expression.c_str());
-        ui->lineEdit->setText(qexp);
+        ui->label->setText(expression.c_str());
     }
 }
 
 void CalculatorWindow::resizeEvent(QResizeEvent *event){
-    lineEditFontSizeCheck();
+    labelFontSizeCheck();
 }
 
 
-void CalculatorWindow::keyboardInput(){
-    expression = ui->lineEdit->text().toStdString();
-    easyInputCheck();
+void CalculatorWindow::buttonClickBackspace(){
+    if(expression.empty()) return;
+    expression.pop_back();
+    ui->label->setText(expression.c_str());
 }
