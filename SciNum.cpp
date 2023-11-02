@@ -8,6 +8,7 @@ SciNum::SciNum()
 	error_flag=0;
 	mantissa=0;
 	exponent=0;
+	num=0;
 }
 
 SciNum::SciNum(const char *n)
@@ -22,6 +23,7 @@ SciNum::SciNum(const char *n)
         mantissa=0;
         exponent=0;
         symbol=1;
+        num=0;
     }
     const char* p=n;
 	if(*p=='-')
@@ -167,7 +169,6 @@ void SciNum::calculate_num()
 void SciNum::calculate_sci_to_num()
 {
 	if(error_flag)return;
-	
     std::memset(coefficient,0,sizeof(int)*200);
     if(std::abs(mantissa)<1e-6)
 	{
@@ -184,7 +185,7 @@ void SciNum::calculate_sci_to_num()
 	{
 		coefficient[i]=(int)temp;
 		temp*=10;
-		while(temp>10)temp-=10;
+		while(temp>10-1e-14)temp-=10;
         if(std::abs(temp)<1e-14)break;
 	}
 
@@ -492,7 +493,7 @@ SciNum SciNum::operator^(const SciNum& n2) const
 		ans.error=n2.error;
 		return ans;
 	}
-
+	
 	if(symbol==0)
 	{
 		return ans;
@@ -515,7 +516,6 @@ SciNum SciNum::operator^(const SciNum& n2) const
 		new_mantissa*=10;
 		exp--;
 	}
-
 	double exppart_mantissa=pow(10,n2.num*exponent);
 	int exp2=0;
 	while(exppart_mantissa>10-1e-6)
@@ -608,4 +608,254 @@ SciNum SciNum::cos(SciNum n)
 	ans.mantissa=temp;
 	ans.calculate_sci_to_num();
 	return ans;
+}
+SciNum SciNum::  calculateExpression(const char *formula)
+{
+	char s[100]={};
+	SciNum result;
+
+	int count=0;
+	
+	{//此程序块用于补右括号，并把算式赋值进s
+		int i;
+		for(i=0;*(formula+i)!='\0';i++)
+		{
+			s[i]=*(formula+i);
+			
+			if(*(formula+i)=='(')
+			{
+				count++;
+			}
+			else if(*(formula+i)==')')
+			{
+				count--;
+			}
+			if(i==99)
+			{
+				result.error_flag=1;
+				result.error="输入过长!";
+				return result;
+			}
+		}
+		if(count==0)
+		{
+			s[i]='\0';
+		}
+		else if(count<0)
+		{
+			result.error_flag=1;
+			result.error="括号不匹配！";
+			return result;
+		}
+		else//count>0
+		{
+			while(count--)
+			{
+				if(i>=99)
+				{
+					result.error_flag=1;
+					result.error="输入过长!";
+					return result;
+				}
+				s[i++]=')';
+			}
+			s[i]='\0';
+		}
+		
+	}
+	
+	std::stack<SciNum> NumStack;
+	std::stack<char> OperatorStack;
+
+	int flag=0;//flag代表当前的状态，0代表下一个是数，1代表下一个是符号
+	char *p=s;
+	while(*p!='\0')
+	{
+		if(flag==0)
+		{
+			
+			if(*p=='(')//左括号，找到则计算该括号内部的值，使用递归
+			{
+				int count=1;//已经数到的左括号-右括号数量
+				char newnumber[100]={};
+				int pnew=0;
+				p++;
+				while(1)
+				{
+					if(*p=='(')count++;
+					else if(*p==')')
+					{
+						if(count==1)
+						{
+							p++;
+							break;
+						}
+						else count--;
+					}
+					newnumber[pnew++]=*p++;
+				}
+				newnumber[pnew]='\0';
+				SciNum n;
+				n=calculateExpression(newnumber);
+				NumStack.push(n);
+				flag=1;
+			}
+			else
+			{
+				char newnumber[100]={};
+				int pnew=0;
+				int pointflag=0;
+				newnumber[pnew++]=*p++;
+				while((*p<='9'&&*p>='0')||*p=='.')
+				{
+					if(*p=='.')
+					{
+						pointflag++;
+					}
+					newnumber[pnew++]=*p++;
+				}
+				newnumber[pnew]='\0';
+				SciNum n(newnumber);
+				NumStack.push(n);
+				flag=1;
+			}
+		}
+		else
+		{
+			if(*p=='+'||*p=='-')
+			{
+				while(!(OperatorStack.empty()))
+				{
+					SciNum n2=NumStack.top();
+					NumStack.pop();
+					SciNum n1=NumStack.top();
+					NumStack.pop();
+					char opera=OperatorStack.top();
+					OperatorStack.pop();
+					if(opera=='+')
+					{
+						n1=n1+n2;
+						NumStack.push(n1);
+					}
+					else if(opera=='-')
+					{
+						n1=n1-n2;
+						NumStack.push(n1);
+					}
+					else if(opera=='*')
+					{
+						n1=n1*n2;
+						NumStack.push(n1);
+					}
+					else if(opera=='/')
+					{
+						n1=n1/n2;
+						NumStack.push(n1);
+					}
+					else if(opera=='^')
+					{
+						n1=n1^n2;
+						NumStack.push(n1);
+					}
+					else
+					{
+						printf("特殊符号\n");
+						exit(0);
+					}
+				}
+				OperatorStack.push(*p);
+				p++;
+			}
+			else if(*p=='*'||*p=='/')
+			{
+				while(!OperatorStack.empty()&&(OperatorStack.top()=='*'||OperatorStack.top()=='/'||OperatorStack.top()=='^'))//计算前面所有的乘、除、乘方
+				{
+					SciNum n2=NumStack.top();
+					NumStack.pop();
+					SciNum n1=NumStack.top();
+					NumStack.pop();
+					char opera=OperatorStack.top();
+					OperatorStack.pop();
+					if(opera=='*')
+					{
+						n1=n1*n2;
+						NumStack.push(n1);
+					}
+					else if(opera=='/')
+					{
+						n1=n1/n2;
+						NumStack.push(n1);
+					}
+					else if(opera=='^')
+					{
+						n1=n1^n2;
+						NumStack.push(n1);
+					}
+				}
+				OperatorStack.push(*p);
+				p++;
+			}
+			else if(*p=='^')
+			{
+				if(!OperatorStack.empty()&&OperatorStack.top()=='^')//计算前面所有乘方(按理来讲顶多只有一个)
+				{
+					SciNum n2=NumStack.top();
+					NumStack.pop();
+					SciNum n1=NumStack.top();
+					NumStack.pop();
+					char opera=OperatorStack.top();
+					OperatorStack.pop();
+					
+					n1=n1^n2;
+					NumStack.push(n1);
+				}
+				OperatorStack.push(*p);
+				p++;
+			}
+			flag=0;
+		}
+	} 
+
+	while(!(OperatorStack.empty()))//计算剩下的
+	{
+		SciNum n2=NumStack.top();
+		NumStack.pop();
+		SciNum n1=NumStack.top();
+		NumStack.pop();
+		char opera=OperatorStack.top();
+		OperatorStack.pop();
+		if(opera=='+')
+		{
+			n1=n1+n2;
+			NumStack.push(n1);
+		}
+		else if(opera=='-')
+		{
+			n1=n1-n2;
+			NumStack.push(n1);
+		}
+		else if(opera=='*')
+		{
+			n1=n1*n2;
+			NumStack.push(n1);
+		}
+		else if(opera=='/')
+		{
+			n1=n1/n2;
+			NumStack.push(n1);
+		}
+		else if(opera=='^')
+		{
+			n1=n1^n2;
+			NumStack.push(n1);
+		}
+		else
+		{
+			printf("特殊符号\n");
+			exit(0);
+		}
+	}
+	result=NumStack.top();
+	NumStack.pop();
+	return result;
 }

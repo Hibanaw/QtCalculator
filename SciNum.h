@@ -32,6 +32,7 @@ class SciNum
         SciNum operator^(const SciNum& n2) const;//用于乘方
         static SciNum sin(const SciNum n);
         static SciNum cos(const SciNum n);
+		static SciNum calculateExpression(const char *formula);
 };
 
 #endif
