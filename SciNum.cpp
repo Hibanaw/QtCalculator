@@ -1,30 +1,13 @@
 #include "SciNum.h"
 
-SciNum::SciNum()
-{
-    std::memset(coefficient,0,sizeof(int)*200);
-	symbol=0;
-    error="";
-	error_flag=0;
-	mantissa=0;
-	exponent=0;
-	num=0;
-}
+SciNum::SciNum():coefficient(), symbol(), error(), error_flag(), mantissa(), exponent(), num()
+{}
 
-SciNum::SciNum(const char *n)
+SciNum::SciNum(const char *n):coefficient(), symbol(), error(), error_flag(), mantissa(), exponent(), num()
 {
 	int decimal_point_flag=0;//代表找到的小数点的数量
 	std::stack<char>int_part;
 
-    {//先都赋成0
-        std::memset(coefficient,0,sizeof(int)*200);
-        error="\0";
-        error_flag=0;
-        mantissa=0;
-        exponent=0;
-        symbol=1;
-        num=0;
-    }
     const char* p=n;
 	if(*p=='-')
 	{
@@ -40,14 +23,13 @@ SciNum::SciNum(const char *n)
 	{
 		error_flag=1;
 		error="语法错误(数首位不为数字)";
-		return;
 	}
 	
 	//当前输入的数字为整数部分
 	exponent=int_part.size()-1;//数字位数减一为其的指数项
 	char c;
 	double temp_num=1;//储存10的exponent-i次方
-	for(int i=int_part.size()-1;i>=0;i--)
+	for(int i=int_part.size()-1;i>=0&&error_flag==0;i--)
 	{
 		c=int_part.top();
 		int_part.pop();
@@ -56,13 +38,12 @@ SciNum::SciNum(const char *n)
 		temp_num*=10;
 	}
 	
-	if(*p!='.'&&*p!='\0')
+	if(*p!='.'&&*p!='\0'&&error_flag==0)
 	{
 		error_flag=1;
 		error="语法错误（数结尾异常）";
-		return;
 	}
-	else if(*p=='.')//开始输入小数部分
+	else if(*p=='.'&&error_flag==0)//开始输入小数部分
 	{
 		p++;
 		std::queue<char>dec_part;
@@ -104,7 +85,7 @@ SciNum::SciNum(const char *n)
 
 	//计算尾数
 	int i;
-	for(i=199;coefficient[i]==0&&i>=0;i--);//寻找第一个有数的位
+	for(i=199;i>=0&&coefficient[i]==0;i--);//寻找第一个有数的位
 	if(i==-1)//说明该数为0
 	{
 		mantissa=0;
@@ -434,14 +415,14 @@ SciNum SciNum::operator/(const SciNum& n2) const
 		return ans;
 	}
 
-	if(symbol==0)
-	{
-		return ans;
-	}
-	else if(n2.symbol==0)
+	if(n2.symbol==0)
 	{
 		ans.error_flag=1;
 		ans.error="除数不能为0";
+		return ans;
+	}
+	else if(symbol==0)
+	{
 		return ans;
 	}
 
@@ -700,7 +681,7 @@ SciNum SciNum::  calculateExpression(const char *formula)
 				NumStack.push(n);
 				flag=1;
 			}
-			else
+			else 
 			{
 				char newnumber[100]={};
 				int pnew=0;
@@ -812,6 +793,12 @@ SciNum SciNum::  calculateExpression(const char *formula)
 				OperatorStack.push(*p);
 				p++;
 			}
+			else
+			{
+				result.error_flag=1;
+				result.error="输入错误";
+				return result;
+			}
 			flag=0;
 		}
 	} 
@@ -820,8 +807,10 @@ SciNum SciNum::  calculateExpression(const char *formula)
 	{
 		if(NumStack.size()==1)
 		{
-			result.error_flag=1;
-			result.error="输入错误";
+			SciNum temp;
+			temp.error_flag=1;
+			temp.error="输入错误";
+			NumStack.push(temp);
 			break;
 		}
 		SciNum n2=NumStack.top();
