@@ -818,6 +818,12 @@ SciNum SciNum::  calculateExpression(const char *formula)
 
 	while(!(OperatorStack.empty()))//计算剩下的
 	{
+		if(NumStack.size()==1)
+		{
+			result.error_flag=1;
+			result.error="输入错误";
+			break;
+		}
 		SciNum n2=NumStack.top();
 		NumStack.pop();
 		SciNum n1=NumStack.top();
