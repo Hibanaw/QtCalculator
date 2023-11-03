@@ -498,6 +498,16 @@ SciNum SciNum::operator^(const SciNum& n2) const
 		exp--;
 	}
 	double exppart_mantissa=pow(10,n2.num*exponent);
+	if(exppart_mantissa<pow(10,-200))
+	{
+		return ans;
+	}
+	else if(exppart_mantissa>pow(10,200))
+	{
+		ans.setError("数据溢出");
+		return ans;
+	}
+	
 	int exp2=0;
 	while(exppart_mantissa>10-1e-6)
 	{
@@ -517,7 +527,7 @@ SciNum SciNum::operator^(const SciNum& n2) const
 		ans.exponent++;
 	}
 
-	if(ans.exponent>100)
+	if(ans.exponent>=100)
 	{
 		ans.error_flag=1;
 		ans.error="数据溢出";
