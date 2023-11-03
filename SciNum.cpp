@@ -703,6 +703,102 @@ SciNum SciNum::  calculateExpression(const char *formula, const SciNum& Ans)
 				NumStack.push(Ans);
 				flag=1;
 			}
+			else if(*p=='c')
+			{
+				SciNum n;//cos后接的数
+				p++;
+				if(*p!='o')
+				{
+					result.setError("语法错误");
+					return result;
+				}
+				p++;
+				if(*p!='s')
+				{
+					result.setError("语法错误");
+					return result;
+				}
+				p++;
+				if(*p!='(')
+				{
+					result.setError("语法错误");
+					return result;
+				}
+				else
+				{
+				int count=1;//已经数到的左括号-右括号数量
+				char newnumber[100]={};
+				int pnew=0;
+				p++;
+				while(1)
+				{
+						if(*p=='(')count++;
+						else if(*p==')')
+						{
+							if(count==1)
+							{
+								p++;
+								break;
+							}
+							else count--;
+						}
+						newnumber[pnew++]=*p++;
+					}
+					newnumber[pnew]='\0';
+					n=calculateExpression(newnumber, Ans);
+				}
+				n=SciNum::cos(n);
+				NumStack.push(n);
+				flag=1;
+			}
+			else if(*p=='s')
+			{
+				SciNum n;//cos后接的数
+				p++;
+				if(*p!='i')
+				{
+					result.setError("语法错误");
+					return result;
+				}
+				p++;
+				if(*p!='n')
+				{
+					result.setError("语法错误");
+					return result;
+				}
+				p++;
+				if(*p!='(')
+				{
+					result.setError("语法错误");
+					return result;
+				}
+				else
+				{
+				int count=1;//已经数到的左括号-右括号数量
+				char newnumber[100]={};
+				int pnew=0;
+				p++;
+				while(1)
+				{
+						if(*p=='(')count++;
+						else if(*p==')')
+						{
+							if(count==1)
+							{
+								p++;
+								break;
+							}
+							else count--;
+						}
+						newnumber[pnew++]=*p++;
+					}
+					newnumber[pnew]='\0';
+					n=calculateExpression(newnumber, Ans);
+				}
+				n=SciNum::sin(n);
+				NumStack.push(n);
+				flag=1;
+			}
 			else 
 			{
 				char newnumber[100]={};
