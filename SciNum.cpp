@@ -3,7 +3,7 @@
 SciNum::SciNum():coefficient(), symbol(), error(), error_flag(), mantissa(), exponent(), num()
 {}
 
-SciNum::SciNum(const char *n):coefficient(), symbol(), error(), error_flag(), mantissa(), exponent(), num()
+SciNum::SciNum(const char *n):coefficient(), symbol(1), error(), error_flag(), mantissa(), exponent(), num()
 {
 	int decimal_point_flag=0;//代表找到的小数点的数量
 	std::stack<char>int_part;
@@ -590,13 +590,18 @@ SciNum SciNum::cos(SciNum n)
 	ans.calculate_sci_to_num();
 	return ans;
 }
-SciNum SciNum::  calculateExpression(const char *formula)
+SciNum SciNum::  calculateExpression(const char *formula, const SciNum& Ans)
 {
 	char s[100]={};
 	SciNum result;
 
 	int count=0;
 	
+	if(*formula=='\0')
+	{
+		result.setError("括号不匹配！");
+		return result;
+	}
 	{//此程序块用于补右括号，并把算式赋值进s
 		int i;
 		for(i=0;*(formula+i)!='\0';i++)
@@ -624,8 +629,7 @@ SciNum SciNum::  calculateExpression(const char *formula)
 		}
 		else if(count<0)
 		{
-			result.error_flag=1;
-			result.error="括号不匹配！";
+			result.setError("语法错误");
 			return result;
 		}
 		else//count>0
@@ -677,8 +681,26 @@ SciNum SciNum::  calculateExpression(const char *formula)
 				}
 				newnumber[pnew]='\0';
 				SciNum n;
-				n=calculateExpression(newnumber);
+				n=calculateExpression(newnumber, Ans);
 				NumStack.push(n);
+				flag=1;
+			}
+			else if(*p=='A')
+			{
+				p++;
+				if(*p!='n')
+				{
+					result.setError("语法错误");
+					return result;
+				}
+				p++;
+				if(*p!='s')
+				{
+					result.setError("语法错误");
+					return result;
+				}
+				p++;
+				NumStack.push(Ans);
 				flag=1;
 			}
 			else 
@@ -853,4 +875,36 @@ SciNum SciNum::  calculateExpression(const char *formula)
 	result=NumStack.top();
 	NumStack.pop();
 	return result;
+}
+
+double SciNum::getNum()
+{
+	return num;
+}
+
+int SciNum::getExp()
+{
+	return exponent;
+}
+
+double SciNum::getMantisaa()
+{
+	return mantissa;
+}
+
+int SciNum::isError()
+{
+	return error_flag;
+}
+
+std::string SciNum::errorMessage()
+{
+	return error;
+}
+
+void SciNum::setError(std::string errorMessage)
+{
+	error_flag=1;
+	error=errorMessage;
+	return;
 }
