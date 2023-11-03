@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QResizeEvent>
+#include "SciNum.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class CalculatorWindow; }
@@ -15,6 +16,8 @@ private:
     static constexpr char operatorChar[] = {
         '+', '-', '*', '/', '^'
     };
+    SciNum preAns;
+    bool doPreAnsExist;
     std::string expression;
     void buttonConnection();
     void addExpression(char c);
@@ -27,7 +30,9 @@ public:
     ~CalculatorWindow();
     void buttonClickEqual();
     void buttonClickInput(char c);
+    void buttonClickInput(const char* str);
     void buttonClickBackspace();
+    void buttonClickAllClear();
 
 private:
     Ui::CalculatorWindow *ui;
